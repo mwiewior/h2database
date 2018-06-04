@@ -71,6 +71,11 @@ import org.h2.value.ValueTime;
 import org.h2.value.ValueTimestamp;
 import org.h2.value.ValueUuid;
 
+import java.io.*;
+import java.nio.ByteBuffer;
+import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
+
 /**
  * This class implements most built-in functions of this database.
  */
@@ -123,6 +128,8 @@ public class Function extends Expression implements FunctionCall {
             NVL2 = 228, DECODE = 229, ARRAY_CONTAINS = 230, FILE_WRITE = 232;
 
     public static final int REGEXP_LIKE = 240;
+
+    public static final int BDG_SQR = 9000, BDG_BIT_LOOKUP = 9001;
 
     /**
      * Used in MySQL-style INSERT ... ON DUPLICATE KEY UPDATE ... VALUES
@@ -203,6 +210,10 @@ public class Function extends Expression implements FunctionCall {
         }
 
         // FUNCTIONS
+        //BDG FUNCTIONS
+        addFunction("BDG_SQR", BDG_SQR, 1, Value.DOUBLE);
+        addFunction("BDG_BIT_LOOKUP", BDG_BIT_LOOKUP, 2, Value.BOOLEAN);
+
         addFunction("ABS", ABS, 1, Value.NULL);
         addFunction("ACOS", ACOS, 1, Value.DOUBLE);
         addFunction("ASIN", ASIN, 1, Value.DOUBLE);
@@ -595,6 +606,13 @@ public class Function extends Expression implements FunctionCall {
             Value[] values) {
         Value result;
         switch (info.type) {
+
+          //BDG
+        case BDG_SQR:
+            result = ValueDouble.get(Math.pow(v0.getLong(),2));
+            break;
+
+
         case ABS:
             result = v0.getSignum() >= 0 ? v0 : v0.negate();
             break;
@@ -1227,7 +1245,13 @@ public class Function extends Expression implements FunctionCall {
             }
             result = ValueLong.get(v0.getLong() % x);
             break;
-        }
+          }
+        case BDG_BIT_LOOKUP:{
+              ByteBuffer bb = ByteBuffer.wrap(v0.getBytesNoCopy());
+              ImmutableRoaringBitmap rr = new ImmutableRoaringBitmap(bb);
+              result = ValueBoolean.get(rr.contains(v1.getInt()));
+              break;
+            }
         case POWER:
             result = ValueDouble.get(Math.pow(
                     v0.getDouble(), v1.getDouble()));
