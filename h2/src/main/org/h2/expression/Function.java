@@ -129,7 +129,7 @@ public class Function extends Expression implements FunctionCall {
 
     public static final int REGEXP_LIKE = 240;
 
-    public static final int BDG_SQR = 9000, BDG_BIT_LOOKUP = 9001;
+    public static final int BDG_SQR = 9000, BDG_BIT_LOOKUP = 9001, BDG_BIT_AND = 9002, BDG_BIT_OR = 9003;
 
     /**
      * Used in MySQL-style INSERT ... ON DUPLICATE KEY UPDATE ... VALUES
@@ -213,6 +213,8 @@ public class Function extends Expression implements FunctionCall {
         //BDG FUNCTIONS
         addFunction("BDG_SQR", BDG_SQR, 1, Value.DOUBLE);
         addFunction("BDG_BIT_LOOKUP", BDG_BIT_LOOKUP, 2, Value.BOOLEAN);
+        addFunction("BDG_BIT_AND", BDG_BIT_AND, 2, Value.BYTES);
+        addFunction("BDG_BIT_OR", BDG_BIT_OR, 2, Value.BYTES);
 
         addFunction("ABS", ABS, 1, Value.NULL);
         addFunction("ACOS", ACOS, 1, Value.DOUBLE);
@@ -1251,6 +1253,46 @@ public class Function extends Expression implements FunctionCall {
               ImmutableRoaringBitmap rr = new ImmutableRoaringBitmap(bb);
               result = ValueBoolean.get(rr.contains(v1.getInt()));
               break;
+            }
+        case BDG_BIT_AND:{
+                  ByteBuffer bb1 = ByteBuffer.wrap(v0.getBytesNoCopy());
+                  ByteBuffer bb2 = ByteBuffer.wrap(v1.getBytesNoCopy());
+                  ImmutableRoaringBitmap rr1 = new ImmutableRoaringBitmap(bb1);
+                  ImmutableRoaringBitmap rr2 = new ImmutableRoaringBitmap(bb2);
+                  ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                  DataOutputStream dos = new DataOutputStream(bos);
+                  ImmutableRoaringBitmap res = ImmutableRoaringBitmap.and(rr1,rr2);
+                  try{
+                    res.serialize(dos);
+                    dos.close();
+                  }
+                  catch(IOException e) {
+                      e.printStackTrace();
+                  }
+
+                  ByteBuffer bb = ByteBuffer.wrap(bos.toByteArray());
+                  result = ValueBytes.get(bb.array());
+                  break;
+          }
+          case BDG_BIT_OR:{
+                    ByteBuffer bb1 = ByteBuffer.wrap(v0.getBytesNoCopy());
+                    ByteBuffer bb2 = ByteBuffer.wrap(v1.getBytesNoCopy());
+                    ImmutableRoaringBitmap rr1 = new ImmutableRoaringBitmap(bb1);
+                    ImmutableRoaringBitmap rr2 = new ImmutableRoaringBitmap(bb2);
+                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                    DataOutputStream dos = new DataOutputStream(bos);
+                    ImmutableRoaringBitmap res = ImmutableRoaringBitmap.or(rr1,rr2);
+                    try{
+                      res.serialize(dos);
+                      dos.close();
+                    }
+                    catch(IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    ByteBuffer bb = ByteBuffer.wrap(bos.toByteArray());
+                    result = ValueBytes.get(bb.array());
+                    break;
             }
         case POWER:
             result = ValueDouble.get(Math.pow(
