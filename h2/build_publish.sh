@@ -7,4 +7,4 @@ mvn deploy:deploy-file -DgroupId=org.h2 \
     -Dfile=bin/h2-1.4.195.jar \
     -DgeneratePom=true \
     -DrepositoryId=nexus \
-    -Durl=http://zsibio.ii.pw.edu.pl/nexus/repository/maven-releases/
+    -Durl=http://zsibio.ii.pw.edu.pl/nexus/repository/maven-external/
