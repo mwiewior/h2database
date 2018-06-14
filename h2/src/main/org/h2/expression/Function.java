@@ -624,7 +624,7 @@ public class Function extends Expression implements FunctionCall {
               DataOutputStream dos = new DataOutputStream(baos);
               int[] ids = rr1.toArray();
               try{
-                for(int i=0; i < values.length; ++i)
+                for(int i=0; i < ids.length; ++i)
                 {
                   dos.writeInt(ids[i]);
                 }
